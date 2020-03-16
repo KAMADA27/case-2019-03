@@ -8,7 +8,7 @@
                             {{ item.title }}
                         </v-list-tile-content>
                     </v-list-tile>
-                    <v-divider :key="`divider-${index}`"></v-divider>
+                    <v-divider :key="`divider-${ index }`"></v-divider>
                 </template>
             </v-list>
         </v-navigation-drawer>
@@ -19,7 +19,10 @@
                 <v-toolbar-title to="/">{{ appTitle }}</v-toolbar-title>
             </router-link>
             <v-spacer class="hidden-sm-and-down"></v-spacer>
-            <v-btn class="hidden-sm-and-down" to="/menu">Menu</v-btn>
+            <div class="hidden-sm-and-down">
+                <v-btn flat>Pacientes</v-btn>
+                <v-btn flat>Médicos</v-btn>
+            </div>
         </v-toolbar>
     </span>
 </template>
@@ -31,7 +34,7 @@ export default {
         return {
             appTitle: 'Vitta',
             drawer: false,
-            items: [{ title: 'Menu' }, { title: 'Sign In' }, { title: 'Join' }]
+            items: [{ title: 'Menu' }, { title: 'Pacientes' }, { title: 'Médicos' }]
         };
     }
 };
