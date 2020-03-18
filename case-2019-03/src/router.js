@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import MedicalCare from './views/MedicalCare';
 import Schedule from './views/Schedule';
+import Consultation from './views/Consultation';
 
 Vue.use(Router);
 
@@ -18,6 +19,11 @@ const router = new Router({
             path: '/schedule',
             name: 'schedule',
             component: Schedule
+        },
+        {
+            path: '/consultation',
+            name: 'consultation',
+            component: Consultation
         }
     ]
 });
