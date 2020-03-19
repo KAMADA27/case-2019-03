@@ -4,7 +4,16 @@
         <v-layout v-for="prescription in prescriptions" :key="prescription.key" column>
             <p><strong>Remédio:</strong> {{ prescription.name }}</p>
             <p><strong>Posologia:</strong> {{ prescription.dosage }}</p>
-            <p><strong>Via de administração:</strong> {{ prescription.routeOfAdm }}</p>
+            <v-layout  justify-space-between>
+                <p><strong>Via de administração:</strong> {{ prescription.routeOfAdm }}</p>
+                <v-btn 
+                    color="red darken-1" 
+                    class="btn-list"
+                    @click="removePrescription(prescription.IdMedicamento)">
+                        Remover
+                </v-btn>
+            </v-layout>
+            <v-divider style="margin-bottom: 20px"></v-divider>
         </v-layout>
     </v-layout>
 </template>
@@ -14,6 +23,15 @@
         name: 'listMedicament',
         props: {
             prescriptions: Array
+        },
+        methods: {
+            removePrescription(id) {
+                let index;
+
+                index = this.prescriptions.findIndex(p => p.IdMedicamento === id);
+                this.prescriptions.splice(index, 1);
+                localStorage.completePrescription = JSON.stringify(this.prescriptions);
+            }
         }
     }
 </script>
@@ -32,5 +50,11 @@
     .form-title {
         color: #1e88e5;
         margin: 15px 0 40px 0;
+    }
+
+    .btn-list {
+        color: #ffffff;
+        position: relative;
+        bottom: 15px;
     }
 </style>

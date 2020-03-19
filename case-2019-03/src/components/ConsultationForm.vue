@@ -5,7 +5,8 @@
             <v-select 
                 :items="medicaments"
                 v-model="medicament"
-                class="form-input" 
+                class="form-input"
+                @change="verifyInteraction(medicament)" 
                 label="Nome do medicamento">
                     <template slot='selection' slot-scope='{ item }'>
                         {{ item.name }}
@@ -16,6 +17,9 @@
                         </span>
                     </template>
             </v-select>
+            <p class="warning-msg" v-if="warningMsg">
+                ATENÇÃO! A INTERAÇÃO ENTRE {{ foundInteraction.Farmaco1 }} E {{ foundInteraction.Farmaco2 }} TEM RISCO {{ foundInteraction.Nome }}
+            </p>
             <v-text-field class="form-input" v-model="dosage" label="Posologia"></v-text-field>
             <v-select 
                 :items="routesOfAdm"
@@ -34,8 +38,8 @@
                 <v-btn 
                     color="red darken-1" 
                     style="color: #ffffff" 
-                    @click="cancelMedicament">
-                        Cancelar
+                    @click="clear">
+                        Limpar
                 </v-btn>
             </v-layout>
         </v-form>
@@ -56,17 +60,23 @@
             return {
                 medicament: [],
                 medicaments: [],
-                medicamentEndpoint: 'http://www.mocky.io/v2/5e7184bc300000d2227a35c1',
+                medicamentEndpoint: 'http://www.mocky.io/v2/5e72bf1c330000930044ca2f',
                 dosage: '',
                 routeOfAdm: '',
                 routesOfAdm: [],
                 routeOfAdmEndpoint: 'http://www.mocky.io/v2/5e71915a300000d99b7a35e4',
                 completePrescription: [],
+                drugsInteraction: [],
+                drugInteractionEndpoint: 'http://www.mocky.io/v2/5e72e8ce330000b35444cab5',
+                listInteractions: [],
+                foundInteraction: {},
+                warningMsg: false
             }
         },
         created() {
             this.getAllMedicaments();
             this.getAllRouteOfAdm();
+            this.getAllInteraction();
         }, 
         methods: {
             getAllMedicaments() {
@@ -87,6 +97,15 @@
                         console.log(error);
                     })
             },
+            getAllInteraction() {
+                axios.get(this.drugInteractionEndpoint)
+                    .then(response => {
+                        this.drugsInteraction = response.data;
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            },
             addMedicament() {
                 let doctorPrescription = { ...this.medicament };
                 doctorPrescription.dosage = this.dosage;
@@ -94,11 +113,49 @@
 
                 this.completePrescription.push(doctorPrescription);
                 localStorage.completePrescription = JSON.stringify(this.completePrescription);
+                this.clear();
             },
-            cancelMedicament() {
+            clear() {
                 this.medicament = [];
                 this.dosage = '',
                 this.routeOfAdm = ''
+            },
+            verifyInteraction(medicament) {
+                let searchDrug;
+                let interationIndex;
+                let medicamentIndex;
+                this.warningMsg = false;
+
+                if (this.completePrescription.length == 0) {
+                    return 
+                }
+
+                this.drugsInteraction.filter(drug => {
+                    this.completePrescription.forEach(pre => {
+                        searchDrug = pre.Farmacos.find(farmaco => {
+                            return farmaco == drug.Farmaco1 || farmaco == drug.Farmaco2
+                        });
+                    
+                        if (searchDrug != undefined) {
+                            this.listInteractions.push(drug);
+                        }
+                    })
+                })
+
+                interationIndex = this.listInteractions.findIndex(interation => {
+                    medicamentIndex = medicament.Farmacos.findIndex(med => {
+                        return med == interation.Farmaco1 || med == interation.Farmaco2
+                    });
+
+                    return interation.Farmaco1 == medicament.Farmacos[medicamentIndex] || interation.Farmaco2 == medicament.Farmacos[medicamentIndex]; 
+                });
+
+                if (interationIndex != -1) {
+                    this.warningMsg = true;
+                    this.foundInteraction = this.listInteractions[interationIndex];
+                }
+
+                console.log(this.foundInteraction);
             }
         }
     }
@@ -121,6 +178,13 @@
     }
 
     .form-input {
-        margin: 20px 0 40px 0;
+        margin: 20px 0 30px 0;
+    }
+
+    .warning-msg {
+        color: #e53935;
+        font-weight: 500;
+        position: relative;
+        bottom: 15px;
     }
 </style>
