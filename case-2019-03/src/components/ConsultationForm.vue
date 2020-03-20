@@ -117,7 +117,6 @@
                     })
             },
             addMedicament() {
-                console.log(this.$refs.form)
                 let doctorPrescription = { ...this.medicament };
                 doctorPrescription.dosage = this.dosage;
 
@@ -164,7 +163,6 @@
                 })
             },
             endOfConsultation() {
-                console.log(this.$modal)
                 this.$modal.show('end-of-consultation');
             }
         }
