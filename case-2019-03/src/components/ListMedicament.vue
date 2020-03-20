@@ -5,11 +5,11 @@
             <p><strong>Remédio:</strong> {{ prescription.name }}</p>
             <p><strong>Posologia:</strong> {{ prescription.dosage }}</p>
             <v-layout  justify-space-between>
-                <p><strong>Via de administração:</strong> {{ prescription.routeOfAdm }}</p>
+                <p><strong>Via de administração:</strong> {{ prescription.viaAdministracao }}</p>
                 <v-btn 
                     color="red darken-1" 
                     class="btn-list"
-                    @click="removePrescription(prescription.IdMedicamento)">
+                    @click="removePrescription(prescription.idMedicamento)">
                         Remover
                 </v-btn>
             </v-layout>
@@ -28,7 +28,7 @@
             removePrescription(id) {
                 let index;
 
-                index = this.prescriptions.findIndex(p => p.IdMedicamento === id);
+                index = this.prescriptions.findIndex(p => p.idMedicamento === id);
                 this.prescriptions.splice(index, 1);
                 localStorage.completePrescription = JSON.stringify(this.prescriptions);
             }

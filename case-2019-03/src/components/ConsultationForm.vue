@@ -1,5 +1,5 @@
 <template>
-    <v-layout column>
+    <v-layout column style="overflow: auto">
         <v-form class="form-card">
             <p class="form-title title">CRIAÇÃO DA PRESCRIÇÃO MÉDICA</p>
             <v-select 
@@ -17,18 +17,12 @@
                         </span>
                     </template>
             </v-select>
-            <p class="warning-msg" v-if="warningMsg">
-                ATENÇÃO! A INTERAÇÃO ENTRE {{ foundInteraction.Farmaco1 }} E {{ foundInteraction.Farmaco2 }} TEM RISCO {{ foundInteraction.Nome }}
+            <p v-for="(interation, id) in foundInteraction" :key="id" class="warning-msg">
+                ATENÇÃO! A INTERAÇÃO ENTRE {{ interation.farmaco1 }} E {{ interation.farmaco2 }} TEM RISCO {{ interation.nome }}
             </p>
             <v-text-field class="form-input" v-model="dosage" label="Posologia"></v-text-field>
-            <v-select 
-                :items="routesOfAdm"
-                item-text="name"
-                v-model="routeOfAdm"
-                class="form-input" 
-                label="Via de administração">
-            </v-select>
-            <v-layout justify-center>
+            <v-text-field class="form-input" v-model="medicament.viaAdministracao" label="Via de administração"></v-text-field>
+            <v-layout justify-end style="margin-bottom: 25px">
                 <v-btn 
                     color="blue darken-1" 
                     style="color: #ffffff"
@@ -43,7 +37,37 @@
                 </v-btn>
             </v-layout>
         </v-form>
-        <list-medicament v-if="completePrescription.length != 0" :prescriptions="completePrescription"></list-medicament>
+        <list-medicament 
+            v-if="completePrescription.length != 0" 
+            :prescriptions="completePrescription">
+        </list-medicament>
+        <v-layout justify-center>
+            <v-btn 
+                color="blue darken-1" 
+                style="color: #ffffff"
+                :disabled="completePrescription.length === 0"
+                @click="endOfConsultation">
+                    Finalizar atendimento
+            </v-btn>
+            <v-btn 
+                color="red darken-1" 
+                style="color: #ffffff"
+                to="/">
+                    Cancelar atendimento
+            </v-btn>
+        </v-layout>
+        <modal name="end-of-consultation" :clickToClose="false" height="240">
+            <v-layout align-center column>
+                <p class="modal-title">ATENDIMENTO FINALIZADO COM SUCESSO!</p>
+                <p>Para prosseguir com o próximo atendimento clique em FINALIZAR</p>
+                <v-btn 
+                    color="blue darken-1" 
+                    class="btn-modal"
+                    to="/">
+                        FINALIZAR
+                </v-btn>
+            </v-layout>
+        </modal>
     </v-layout>
 </template>
 
@@ -60,22 +84,17 @@
             return {
                 medicament: [],
                 medicaments: [],
-                medicamentEndpoint: 'http://www.mocky.io/v2/5e72bf1c330000930044ca2f',
+                medicamentEndpoint: 'http://www.mocky.io/v2/5e73ca8b300000fd9b2e6828',
                 dosage: '',
-                routeOfAdm: '',
-                routesOfAdm: [],
-                routeOfAdmEndpoint: 'http://www.mocky.io/v2/5e71915a300000d99b7a35e4',
                 completePrescription: [],
                 drugsInteraction: [],
-                drugInteractionEndpoint: 'http://www.mocky.io/v2/5e72e8ce330000b35444cab5',
-                listInteractions: [],
-                foundInteraction: {},
-                warningMsg: false
+                drugInteractionEndpoint: 'http://www.mocky.io/v2/5e73bbeb3000002fab2e67c7',
+                interactions: [],
+                foundInteraction: []
             }
         },
         created() {
             this.getAllMedicaments();
-            this.getAllRouteOfAdm();
             this.getAllInteraction();
         }, 
         methods: {
@@ -83,15 +102,6 @@
                 axios.get(this.medicamentEndpoint)
                     .then(response => {
                         this.medicaments = response.data;
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    })
-            },
-            getAllRouteOfAdm() {
-                axios.get(this.routeOfAdmEndpoint)
-                    .then(response => {
-                        this.routesOfAdm = response.data
                     })
                     .catch(error => {
                         console.log(error);
@@ -107,9 +117,9 @@
                     })
             },
             addMedicament() {
+                console.log(this.$refs.form)
                 let doctorPrescription = { ...this.medicament };
                 doctorPrescription.dosage = this.dosage;
-                doctorPrescription.routeOfAdm = this.routeOfAdm;
 
                 this.completePrescription.push(doctorPrescription);
                 localStorage.completePrescription = JSON.stringify(this.completePrescription);
@@ -118,44 +128,44 @@
             clear() {
                 this.medicament = [];
                 this.dosage = '',
-                this.routeOfAdm = ''
+                this.foundInteraction = [];
             },
             verifyInteraction(medicament) {
-                let searchDrug;
-                let interationIndex;
-                let medicamentIndex;
-                this.warningMsg = false;
+                let hasInteration = [];
+                this.foundInteraction = [];
 
                 if (this.completePrescription.length == 0) {
                     return 
                 }
 
-                this.drugsInteraction.filter(drug => {
-                    this.completePrescription.forEach(pre => {
-                        searchDrug = pre.Farmacos.find(farmaco => {
-                            return farmaco == drug.Farmaco1 || farmaco == drug.Farmaco2
-                        });
+                this.drugsInteraction.forEach((interation) => {
+                    let interations;
                     
-                        if (searchDrug != undefined) {
-                            this.listInteractions.push(drug);
-                        }
-                    })
+                    [interation.farmaco1, interation.farmaco2].forEach(farmaco => {
+                        this.completePrescription.forEach(pre => {
+                            interations = pre.farmacos.includes(farmaco);
+                            if (interations === true) {
+                               hasInteration.push(interation);
+                            }
+                        })
+                    });
                 })
 
-                interationIndex = this.listInteractions.findIndex(interation => {
-                    medicamentIndex = medicament.Farmacos.findIndex(med => {
-                        return med == interation.Farmaco1 || med == interation.Farmaco2
-                    });
+                hasInteration.forEach(interation => {
+                    let result;
 
-                    return interation.Farmaco1 == medicament.Farmacos[medicamentIndex] || interation.Farmaco2 == medicament.Farmacos[medicamentIndex]; 
-                });
+                    result = [interation.farmaco1, interation.farmaco2].some(farmaco => {
+                        return medicament.farmacos.includes(farmaco);
+                    })
 
-                if (interationIndex != -1) {
-                    this.warningMsg = true;
-                    this.foundInteraction = this.listInteractions[interationIndex];
-                }
-
-                console.log(this.foundInteraction);
+                    if (result) {
+                        this.foundInteraction.push(interation)  
+                    }  
+                })
+            },
+            endOfConsultation() {
+                console.log(this.$modal)
+                this.$modal.show('end-of-consultation');
             }
         }
     }
@@ -186,5 +196,17 @@
         font-weight: 500;
         position: relative;
         bottom: 15px;
+    }
+
+    .modal-title {
+        color: #1e88e5;
+        font-size: 20px;
+        font-weight: 500;
+        margin-top: 30px;
+    }
+
+    .btn-modal {
+        color: #ffffff;
+        margin-top: 30px;
     }
 </style>
